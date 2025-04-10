@@ -1,46 +1,36 @@
-# -*- coding: utf-8 -*-
-"""
-数据库模型定义
-
-定义与紫外线设备检测相关的数据库模型
-"""
-
-from flask_sqlalchemy import SQLAlchemy
+from exts import db
 from datetime import datetime
 
-# 创建SQLAlchemy实例
-db = SQLAlchemy()
+class PermissionsModel(db.Model):
+    __tablename__ = "permissions"
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    permissions = db.Column(db.String(100), nullable=False)
 
-class UVRecord(db.Model):
-    """
-    紫外线检测记录模型
-    
-    存储设备ID、紫外线强度、温度、湿度以及记录时间
-    """
-    __tablename__ = 'uv_records'
-    
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment='记录ID')
-    device_id = db.Column(db.String(50), nullable=False, index=True, comment='设备ID')
-    uv_intensity = db.Column(db.Float, nullable=False, comment='紫外线强度')
-    temperature = db.Column(db.Float, nullable=False, comment='温度(°C)')
-    humidity = db.Column(db.Float, nullable=False, comment='湿度(%)')
-    created_at = db.Column(db.DateTime, default=datetime.now, comment='记录创建时间')
-    
-    def __repr__(self):
-        return f"<UVRecord(id={self.id}, device_id='{self.device_id}', uv_intensity={self.uv_intensity})>"
-    
-    def to_dict(self):
-        """
-        将模型转换为字典
-        
-        返回:
-            包含模型数据的字典
-        """
-        return {
-            'id': self.id,
-            'device_id': self.device_id,
-            'uv_intensity': self.uv_intensity,
-            'temperature': self.temperature,
-            'humidity': self.humidity,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
-        }
+class UVModel(db.Model):
+    __tablename__ = "uv"
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    esp_id = db.Column(db.Integer, nullable=False)
+    uv_value = db.Column(db.Float, nullable=False)
+    level = db.Column(db.Integer, nullable=False)
+    time = db.Column(db.DateTime, default=datetime.now)
+
+class UserModel(db.Model):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    username = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(100), nullable=False , unique=True)
+    join_time = db.Column(db.DateTime, default=datetime.now)
+
+    permissions_id = db.Column(db.Integer,db.ForeignKey('permissions.id'))
+    permissions = db.relationship(PermissionsModel, backref='user')
+
+    UV_id = db.Column(db.Integer, db.ForeignKey('uv.id'))
+    UV = db.relationship(UVModel, backref='user')
+
+class EmailCaptchaModel(db.Model):
+    __tablename__ = "email_captcha"
+    email = db.Column(db.String(100), primary_key=True, nullable=False , unique=True)
+    captcha = db.Column(db.String(100), nullable=False)
+
